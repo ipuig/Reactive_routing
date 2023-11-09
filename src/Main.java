@@ -1,4 +1,3 @@
-
 public class Main {
 
     enum InstanceType {
@@ -24,13 +23,18 @@ public class Main {
     
     public static void main(String[] args) {
 
+        NetworkDevice device;
+
         switch(processArgs(args)) {
             case ENPOINT:
-                System.out.println("Running endoint");
+                device = new Endpoint();
+                device.start();
                 break;
 
             case ROUTER:
                 System.out.println("Running router");
+                device = new Router();
+                device.start();
                 break;
 
             default:

@@ -1,0 +1,20 @@
+
+Create docker container
+docker create -ti --name <container_name> --cap-add=all -v <path> <baseimage> /bin/bash
+docker create -ti --name server --cap-add=all -v ~/compnets:/compnets csnetimage /bin/bash
+
+Create a docker network
+docker network create -d bridge --subnet <ip/port> <network_name>
+docker network create -d bridge --subnet 172.20.0.0/16 csnet
+
+Build docker image
+docker build -t <image_name> <Dockerfile_path>
+docker build −t csnetimage .
+
+Connect docker container to docker network
+docker network connect <network_name> <container_name>
+docker network connect csnet client
+
+Connect to docker container
+docker start -i <container_name>
+docker start -i client

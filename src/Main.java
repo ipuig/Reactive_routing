@@ -27,13 +27,14 @@ public class Main {
 
         switch(processArgs(args)) {
             case ENPOINT:
-                device = new Endpoint();
+                System.out.println("Running endpoint...");
+                device = new Endpoint(Integer.parseInt(args[1]));
                 device.start();
                 break;
 
             case ROUTER:
-                System.out.println("Running router");
-                device = new Router();
+                System.out.println("Running router...");
+                device = new Router(Integer.parseInt(args[1]));
                 device.start();
                 break;
 

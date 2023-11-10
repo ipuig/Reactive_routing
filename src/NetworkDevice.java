@@ -14,10 +14,11 @@ public abstract class NetworkDevice {
     public ReceiveHandler receiver;
     private final int BUFFER_SIZE = 1024;
 
-    public NetworkDevice() {
+    public NetworkDevice(int port) {
         this.threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
         try {
-            this.socket = new DatagramSocket();
+            this.socket = new DatagramSocket(port);
+            this.socket.setBroadcast(true);
         }
         catch(Exception e) {
             e.printStackTrace();

@@ -7,7 +7,7 @@ public class Router {
 
     public static void main(String[] args) throws Exception {
 
-        DatagramSocket socket = new DatagramSocket(5000, InetAddress.getByName("0.0.0.0"));
+        DatagramSocket socket = new DatagramSocket(5000);
         socket.setBroadcast(true);
 
         while(true) {

@@ -1,37 +1,30 @@
 package ie.tcd.scss.network;
 
 import java.net.DatagramPacket;
-import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
-
-import ie.tcd.scss.app.User;
 
 public class MainNode extends NetworkDevice {
 
-    private ConcurrentHashMap<Integer, InetAddress> connections;
-    private List<Integer> addressList;
-    private List<User> users;
+    private ConcurrentHashMap<Integer, NodeInfo> connections;
+    private ArrayBlockingQueue<Integer> active;
+    private static final int CONNECTION_REFRESH_RATE_IN_SECONDS = 5;
+    private static final int NUMBER_OF_DEVICES_ALLOWED = 30;
 
     public MainNode() {
         super(MAIN_NODE_PORT);
         connections = new ConcurrentHashMap<>();
-        addressList = new ArrayList<>();
-        users = new ArrayList<>();
     }
 
     @Override
     public void receive() {
         try {
-            System.out.println("waiting to receive");
             byte[] buffer = new byte[BUFFER_SIZE];
             DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
             socket.receive(packet);
-            System.out.println("received something");
-            threadPool.submit(new ReceiverHandler(packet, addressList, connections));
+            threadPool.submit(new ReceiverHandler(packet));
         } 
         catch (Exception e) {
             e.printStackTrace();
@@ -41,61 +34,107 @@ public class MainNode extends NetworkDevice {
     @Override
     public void run() {
         System.out.println("Aplication listening at port " + MAIN_NODE_PORT + "...");
-        try {
-            System.out.println("IP: " + InetAddress.getLocalHost());
-        }
-        catch(Exception e) { }
-        /* new Thread(() -> {
-            while(true) System.out.println(addressList);
-        }).start(); */
+        new Thread(() -> {
+
+           while(true) {
+               active = new ArrayBlockingQueue<>(NUMBER_OF_DEVICES_ALLOWED);
+               System.out.printf("%d devices connected\n%s", 
+                       connections.size(),
+                       connections.isEmpty() ? "" : connections.keySet().toString() + "\n");
+
+               delay(CONNECTION_REFRESH_RATE_IN_SECONDS);
+               connections.elements()
+                   .asIterator()
+                   .forEachRemaining(this::checkConnection);
+               updateConnections();
+           } 
+
+        }).start();
         while(true) receive();
+    }
+
+    private void updateConnections() {
+        if (active.isEmpty()) {
+            connections.clear();
+            return;
+        }
+
+        connections.forEach((k, v) -> {
+            if (!active.contains(k)) connections.remove(k);
+        });
+    }
+
+    private void checkConnection(NodeInfo nodeInfo) {
+        send(PacketType.CHECK_CONNECTION, SERVER_GENERATED_ADDRESS_BOUND, new byte[0], nodeInfo.getAddress(), nodeInfo.getPort());
+    }
+
+    private void delay(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000);
+        }
+        catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private class ReceiverHandler extends Receiver {
 
-        private List<Integer> addressList;
-        private ConcurrentHashMap<Integer, InetAddress> connections;
-
-        public ReceiverHandler(DatagramPacket receivedPacket, List<Integer> addressList, ConcurrentHashMap<Integer, InetAddress> connections) {
+        public ReceiverHandler(DatagramPacket receivedPacket) {
             super(receivedPacket);
-            this.addressList = addressList;
-            this.connections = connections;
         }
 
         @Override
         public void run() {
-            System.out.println("Running receive");
 
-            System.out.println(PacketType.fromInt(receivedPacketType));
-            if (PacketType.fromInt(receivedPacketType) == PacketType.LOG_IN) {
-                System.out.println("received logging request");
-                int payload = generateRandomAddress();
-                connections.put(payload, receivedPacket.getAddress());
-                Header header = new Header(PacketType.RANDOM_ADDR.value(), 0, (short) Integer.SIZE);
-                byte[] headerData = header.encode();
-                ByteBuffer buff = ByteBuffer.allocate(headerData.length + Integer.SIZE);
-                buff.put(headerData);
-                buff.putInt(payload);
-                byte[] data = buff.array();
+            switch(PacketType.fromInt(receivedPacketType)) {
+                case LOG_IN:
+                    System.out.println("----------------------------");
+                    sendGeneratedAddress();
+                    break;
 
-                try {
-                    DatagramPacket sending = new DatagramPacket(data, data.length, receivedPacket.getAddress(), receivedPacket.getPort());
-                    socket.send(sending);
-                }
-                catch(Exception e) {
-                    e.printStackTrace();
-                }
+                case CONNECTION_ACTIVE:
+                    active.add(receivedSenderAddress);
+                    break;
+
+                case CONNECTION_INACTIVE:
+                    System.out.println(senderAddress + " disconnected");
+                    connections.remove(receivedSenderAddress);
+                    break;
+
+                case ACK:
+                    break;
+
+                default:
+                    break;
             }
         }
 
-        private int generateRandomAddress() {
+        private void sendGeneratedAddress() {
+            int generatedAddr = generateRandomAddress();
+            connections.put(generatedAddr, new NodeInfo(receivedAddress, receivedPort));
+            active.add(generatedAddr);
+            System.out.printf("Received log request from %s\nreal address=%s\ngenerated=%s\n",
+                    receivedPort == ENDPOINT_PORT ? "endpoint" : "router", 
+                    receivedAddress.toString().substring(1), generatedAddr);
 
+            ByteBuffer buff = ByteBuffer.allocate(Integer.SIZE);
+            buff.putInt(generatedAddr);
+            byte[] payload = buff.array();
+            send(PacketType.RANDOM_ADDR, SERVER_GENERATED_ADDRESS_BOUND, payload, receivedAddress, receivedPort);
+        }
+
+        /**
+         * Generates a random address for the devices that connect to this node
+         * I am using Integer.MAX_VALUE to minimise the number of recursions for
+         * for this method, and since rnd.nextInt(limit) is exclusive, I can
+         * use Integer.MAX_VALUE to represent the address for this device.
+         */
+        private int generateRandomAddress() {
             Random rnd = new Random();
             int value = rnd.nextInt(Integer.MAX_VALUE);
-
-            if(addressList.contains(value)) return generateRandomAddress();
-            addressList.add(value);
+            if(connections.containsKey(value)) return generateRandomAddress();
             return value;
         }
+
     }
 }

@@ -39,25 +39,22 @@ public class Router extends Member {
 
             switch(PacketType.fromInt(receivedPacketType)) {
                 case MESSAGE:
-                    System.out.println("Received a message from " + receivedSenderAddress + " forwarding...");
-                    send(PacketType.DISCOVER, senderAddress, receivedPayload);
                     break;
 
                 case DISCOVER:
-                    System.out.printf("Received a discover from %d, forwarding...\n", receivedSenderAddress);
-                    send(PacketType.DISCOVER, senderAddress, receivedPayload);
                     break;
 
                 case PATH:
-                    System.out.println("Received a path from " + receivedSenderAddress);
                     break;
 
                 case DEAD_END:
-                    System.out.println("Received a dead end from " + receivedSenderAddress);
                     break;
                 
                 case RANDOM_ADDR:
-                    System.out.println("heya");
+                    break;
+
+                case CHECK_CONNECTION:
+                    stillConnected();
                     break;
 
                 case ACK:

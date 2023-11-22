@@ -7,6 +7,8 @@ import java.net.NetworkInterface;
 import java.util.stream.Stream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.awt.*;
+import javax.swing.*;
 
 public class Endpoint extends Member {
 
@@ -17,11 +19,16 @@ public class Endpoint extends Member {
     public void run() {
         new Thread(() -> {while(true) receive();}).start();
         System.out.println("endpoint no-" + senderAddress);
+        /* EventQueue.invokeLater(() -> {
+            var frame = new VisualStuff();
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setVisible(true);
+        }); */
         Scanner in = new Scanner(System.in);
         while(true) {
             System.out.println("Payload: ");
             byte[] payload = in.nextLine().getBytes();
-            send(PacketType.MESSAGE, senderAddress, payload);
+            sendBroadcast(PacketType.MESSAGE, senderAddress, payload);
         }
     }
 
@@ -69,6 +76,10 @@ public class Endpoint extends Member {
                     System.out.println("heya i received the new address");
                     break;
 
+                case CHECK_CONNECTION:
+                    stillConnected();
+                    break;
+
                 case ACK:
                     break;
 
@@ -80,4 +91,12 @@ public class Endpoint extends Member {
         }
 
     }
+
+    /* private class VisualStuff extends JFrame {
+
+        public VisualStuff() {
+            setSize(300, 200);
+        }
+
+    } */
 }

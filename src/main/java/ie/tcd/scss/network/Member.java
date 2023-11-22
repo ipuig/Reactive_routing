@@ -21,25 +21,25 @@ public abstract class Member extends NetworkDevice {
         }
     }
 
+    /**
+     * sends a logging request to the server
+     * and receives a random generated address
+     * that then is set as the sender address of this node
+     */
     public void connect() throws Exception {
-
-        send(PacketType.LOG_IN, 0, new byte[0], applicationAddress);
-        System.out.println("log in to the server...");
-
+        send(PacketType.LOG_IN, 0, new byte[0], applicationAddress, MAIN_NODE_PORT);
         byte[] buffer = new byte[1024];
         DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
         socket.receive(packet);
-        System.out.println("receiving...");
-
         ByteBuffer buff = ByteBuffer.wrap(Header.getPayload(packet.getData()));
         senderAddress = buff.getInt();
-        System.out.println("Success!");
     }
 
-    public void disconnect() throws Exception {
-        Header header = new Header(PacketType.LOG_OUT.value(), 0, (short) Integer.SIZE);
-        byte[] headerData = header.encode();
-        DatagramPacket packet = new DatagramPacket(headerData, headerData.length, applicationAddress, MAIN_NODE_PORT);
-        socket.send(packet);
+    public void stillConnected() {
+        send(PacketType.CONNECTION_ACTIVE, senderAddress, new byte[0], applicationAddress, MAIN_NODE_PORT);
+    }
+
+    public void disconnect() {
+        send(PacketType.CONNECTION_INACTIVE, senderAddress, new byte[0], applicationAddress, MAIN_NODE_PORT);
     }
 }

@@ -1,13 +1,16 @@
 package ie.tcd.scss.network;
 
 import java.net.DatagramPacket;
+import java.net.InetAddress;
 
 public abstract class Receiver implements Runnable {
 
     public byte receivedPacketType;
     public int receivedSenderAddress;
+    public int receivedPort;
     public short receivedPayloadLength;
     public byte[] receivedPayload;
+    public InetAddress receivedAddress;
     public DatagramPacket receivedPacket;
 
     public Receiver(DatagramPacket receivedPacket) {
@@ -21,5 +24,7 @@ public abstract class Receiver implements Runnable {
         receivedSenderAddress = header.getSenderAddress();
         receivedPayloadLength = header.getPayloadLength();
         receivedPayload = Header.getPayload(data);
+        receivedPort = receivedPacket.getPort();
+        receivedAddress = receivedPacket.getAddress();
     }
 }

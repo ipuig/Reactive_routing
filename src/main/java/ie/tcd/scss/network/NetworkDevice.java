@@ -24,6 +24,7 @@ public abstract class NetworkDevice {
     public static final int MAIN_NODE_PORT = 6000;
     public static final int THREAD_POOL_SIZE = 10;
     public static final int BUFFER_SIZE = 1024;
+    public static final int SERVER_GENERATED_ADDRESS_BOUND = Integer.MAX_VALUE;
 
 
     public ExecutorService threadPool;
@@ -65,7 +66,7 @@ public abstract class NetworkDevice {
             });
     }
 
-    public void send(PacketType type, int id, byte[] payload) {
+    public void sendBroadcast(PacketType type, int id, byte[] payload) {
         Header header = new Header(type.value(), id, (short) payload.length);
         byte[] headerData = header.encode();
         ByteBuffer buff = ByteBuffer.allocate(headerData.length + payload.length);
@@ -75,19 +76,20 @@ public abstract class NetworkDevice {
         sendPacket(data);
     }
 
-    public void send(PacketType type, int id, byte[] payload, InetAddress ip) {
+    public void send(PacketType type, int id, byte[] payload, InetAddress ip, int port) {
         Header header = new Header(type.value(), id, (short) payload.length);
         byte[] headerData = header.encode();
         ByteBuffer buff = ByteBuffer.allocate(headerData.length + payload.length);
         buff.put(headerData);
         buff.put(payload);
         byte[] data = buff.array();
-        DatagramPacket toServer = new DatagramPacket(data, data.length, ip, MAIN_NODE_PORT);
+        DatagramPacket toSend = new DatagramPacket(data, data.length, ip, port);
+
         try {
-            socket.send(toServer);
+            socket.send(toSend);
         }
         catch(Exception e) {
-            System.out.println("error sending");
+            e.printStackTrace();
         }
     }
 
@@ -112,7 +114,9 @@ public abstract class NetworkDevice {
     public abstract void run();
 
     static enum PacketType {
-        DISCOVER(0), MESSAGE(1), PATH(2), DEAD_END(3), LOG_IN(4), LOG_OUT(5), RANDOM_ADDR(6), ACK(7), NOT_SUPPORTED(100);
+        DISCOVER(0), MESSAGE(1), PATH(2), DEAD_END(3), LOG_IN(4),
+        CHECK_CONNECTION(5), CONNECTION_ACTIVE(6), CONNECTION_INACTIVE(7),
+        RANDOM_ADDR(8), ACK(9), NOT_SUPPORTED(100);
 
         byte value;
 
@@ -127,9 +131,11 @@ public abstract class NetworkDevice {
                 case 2: return PATH;
                 case 3: return DEAD_END;
                 case 4: return LOG_IN;
-                case 5: return LOG_OUT;
-                case 6: return RANDOM_ADDR;
-                case 7: return ACK;
+                case 5: return CHECK_CONNECTION;
+                case 6: return CONNECTION_ACTIVE;
+                case 7: return CONNECTION_INACTIVE;
+                case 8: return RANDOM_ADDR;
+                case 9: return ACK;
                 default: return NOT_SUPPORTED;
             }
         }

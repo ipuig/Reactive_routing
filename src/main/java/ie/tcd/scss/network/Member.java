@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 
 public abstract class Member extends NetworkDevice {
 
-    private InetAddress applicationAddress;
+    public InetAddress applicationAddress;
 
     public Member(int port) {
         super(port);

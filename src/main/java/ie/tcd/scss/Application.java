@@ -4,7 +4,6 @@ import ie.tcd.scss.network.Endpoint;
 import ie.tcd.scss.network.MainNode;
 import ie.tcd.scss.network.NetworkDevice;
 import ie.tcd.scss.network.Router;
-import ie.tcd.scss.app.User;
 
 public class Application {
 

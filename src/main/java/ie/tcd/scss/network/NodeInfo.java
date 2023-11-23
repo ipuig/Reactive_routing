@@ -4,14 +4,24 @@ import java.net.InetAddress;
 
 public class NodeInfo {
 
+    private int id;
     private InetAddress address;
     private int port;
     private boolean active;
 
-    public NodeInfo(InetAddress address, int port) {
+    public NodeInfo(int id, InetAddress address, int port) {
+        this.id = id;
         this.address = address;
         this.port = port;
         this.active = true;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public InetAddress getAddress() {

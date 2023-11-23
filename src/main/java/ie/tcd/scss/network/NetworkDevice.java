@@ -22,7 +22,7 @@ public abstract class NetworkDevice {
     public static final int ROUTER_PORT = 5000;
     public static final int ENDPOINT_PORT = 5001;
     public static final int MAIN_NODE_PORT = 6000;
-    public static final int THREAD_POOL_SIZE = 10;
+    public static final int THREAD_POOL_SIZE = 20;
     public static final int BUFFER_SIZE = 1024;
     public static final int SERVER_GENERATED_ADDRESS_BOUND = Integer.MAX_VALUE;
 
@@ -116,7 +116,8 @@ public abstract class NetworkDevice {
     static enum PacketType {
         DISCOVER(0), MESSAGE(1), PATH(2), DEAD_END(3), LOG_IN(4),
         CHECK_CONNECTION(5), CONNECTION_ACTIVE(6), CONNECTION_INACTIVE(7),
-        RANDOM_ADDR(8), ACK(9), NOT_SUPPORTED(100);
+        RANDOM_ADDR(8), ACK(9), REQUEST_ENDPOINT_LIST(10), 
+        ENDPOINT_LIST(11), NOT_SUPPORTED(100);
 
         byte value;
 
@@ -136,6 +137,8 @@ public abstract class NetworkDevice {
                 case 7: return CONNECTION_INACTIVE;
                 case 8: return RANDOM_ADDR;
                 case 9: return ACK;
+                case 10: return REQUEST_ENDPOINT_LIST;
+                case 11: return ENDPOINT_LIST;
                 default: return NOT_SUPPORTED;
             }
         }

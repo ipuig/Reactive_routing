@@ -1,35 +1,32 @@
 package ie.tcd.scss.network;
 
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.util.stream.Stream;
+import java.awt.EventQueue;
 import java.util.ArrayList;
+import java.util.List;
+import java.net.DatagramPacket;
+import java.nio.ByteBuffer;
 import java.util.Scanner;
-import java.awt.*;
-import javax.swing.*;
+
+
+import ie.tcd.scss.gui.Host;
 
 public class Endpoint extends Member {
 
+    private List<Integer> otherHostsAddress;
+    private Host gui;
+
+
     public Endpoint() {
         super(ENDPOINT_PORT);
+        otherHostsAddress = new ArrayList<>();
     }
 
     public void run() {
         new Thread(() -> {while(true) receive();}).start();
         System.out.println("endpoint no-" + senderAddress);
-        /* EventQueue.invokeLater(() -> {
-            var frame = new VisualStuff();
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setVisible(true);
-        }); */
-        Scanner in = new Scanner(System.in);
-        while(true) {
-            System.out.println("Payload: ");
-            byte[] payload = in.nextLine().getBytes();
-            sendBroadcast(PacketType.MESSAGE, senderAddress, payload);
-        }
+        EventQueue.invokeLater(() -> {
+            gui = new Host(this);
+        });
     }
 
     public void receive() {
@@ -42,6 +39,11 @@ public class Endpoint extends Member {
             e.printStackTrace();
         }
 
+    }
+
+    public void requestEndpointList() {
+        System.out.println("looking for other endpoints...");
+        send(PacketType.REQUEST_ENDPOINT_LIST, senderAddress, new byte[0], applicationAddress, MAIN_NODE_PORT);
     }
 
     private class ReceiverHandler extends Receiver {
@@ -73,11 +75,15 @@ public class Endpoint extends Member {
                     break;
 
                 case RANDOM_ADDR:
-                    System.out.println("heya i received the new address");
+                    System.out.println("Random address received");
                     break;
 
                 case CHECK_CONNECTION:
                     stillConnected();
+                    break;
+
+                case ENDPOINT_LIST:
+                    populateHosts();
                     break;
 
                 case ACK:
@@ -90,13 +96,16 @@ public class Endpoint extends Member {
             }
         }
 
+        private void populateHosts() {
+            otherHostsAddress = new ArrayList<>();
+            ByteBuffer payloadBuffer = ByteBuffer.wrap(receivedPayload);
+            int numberOfHosts = payloadBuffer.getInt();
+            for (int i = 0; i < numberOfHosts; i++) otherHostsAddress.add(payloadBuffer.getInt());
+        }
     }
 
-    /* private class VisualStuff extends JFrame {
+    public List<Integer> getOtherHostsAddress() {
+        return otherHostsAddress;
+    }
 
-        public VisualStuff() {
-            setSize(300, 200);
-        }
-
-    } */
 }

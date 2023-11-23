@@ -2,6 +2,7 @@ package ie.tcd.scss.network;
 
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -10,7 +11,7 @@ public class MainNode extends NetworkDevice {
 
     private ConcurrentHashMap<Integer, NodeInfo> connections;
     private ArrayBlockingQueue<Integer> active;
-    private static final int CONNECTION_REFRESH_RATE_IN_SECONDS = 5;
+    private static final int CONNECTION_REFRESH_RATE_IN_SECONDS = 10;
     private static final int NUMBER_OF_DEVICES_ALLOWED = 30;
 
     public MainNode() {
@@ -46,6 +47,7 @@ public class MainNode extends NetworkDevice {
                connections.elements()
                    .asIterator()
                    .forEachRemaining(this::checkConnection);
+               delay(CONNECTION_REFRESH_RATE_IN_SECONDS / 2);
                updateConnections();
            } 
 
@@ -60,7 +62,10 @@ public class MainNode extends NetworkDevice {
         }
 
         connections.forEach((k, v) -> {
-            if (!active.contains(k)) connections.remove(k);
+            if (!active.contains(k)) {
+                if(!connections.get(k).isActive()) connections.remove(k);
+                else connections.get(k).setActive(false);
+            }
         });
     }
 
@@ -75,6 +80,15 @@ public class MainNode extends NetworkDevice {
         catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private List<Integer> getEndpointsAddress() {
+        return connections
+            .values()
+            .stream()
+            .filter(nodeInfo -> nodeInfo.getPort() == ENDPOINT_PORT)
+            .map(NodeInfo::getId)
+            .toList();
     }
 
     private class ReceiverHandler extends Receiver {
@@ -94,11 +108,16 @@ public class MainNode extends NetworkDevice {
 
                 case CONNECTION_ACTIVE:
                     active.add(receivedSenderAddress);
+                    connections.get(receivedSenderAddress).setActive(true);
                     break;
 
                 case CONNECTION_INACTIVE:
                     System.out.println(senderAddress + " disconnected");
                     connections.remove(receivedSenderAddress);
+                    break;
+
+                case REQUEST_ENDPOINT_LIST:
+                    sendEndpointList();
                     break;
 
                 case ACK:
@@ -109,9 +128,20 @@ public class MainNode extends NetworkDevice {
             }
         }
 
+        private void sendEndpointList() {
+            List<Integer> addresses = getEndpointsAddress();
+            int numberOfEndpoints = addresses.size();
+            ByteBuffer buff = ByteBuffer.allocate(32 * (numberOfEndpoints + 1));
+            buff.putInt(numberOfEndpoints);
+            addresses.forEach(buff::putInt);
+            byte[] endpoints = buff.array();
+            send(PacketType.ENDPOINT_LIST, SERVER_GENERATED_ADDRESS_BOUND, endpoints, receivedAddress, receivedPort);
+
+        }
+
         private void sendGeneratedAddress() {
             int generatedAddr = generateRandomAddress();
-            connections.put(generatedAddr, new NodeInfo(receivedAddress, receivedPort));
+            connections.put(generatedAddr, new NodeInfo(generatedAddr, receivedAddress, receivedPort));
             active.add(generatedAddr);
             System.out.printf("Received log request from %s\nreal address=%s\ngenerated=%s\n",
                     receivedPort == ENDPOINT_PORT ? "endpoint" : "router", 

@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
-import java.util.Scanner;
 
 
 import ie.tcd.scss.gui.Host;

@@ -25,6 +25,7 @@ public abstract class NetworkDevice {
     public static final int THREAD_POOL_SIZE = 20;
     public static final int BUFFER_SIZE = 1024;
     public static final int SERVER_GENERATED_ADDRESS_BOUND = Integer.MAX_VALUE;
+    public static final int CONNECTION_REFRESH_RATE_IN_SECONDS = 5;
 
 
     public ExecutorService threadPool;

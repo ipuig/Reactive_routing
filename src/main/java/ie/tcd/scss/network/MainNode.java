@@ -11,7 +11,6 @@ public class MainNode extends NetworkDevice {
 
     private ConcurrentHashMap<Integer, NodeInfo> connections;
     private ArrayBlockingQueue<Integer> active;
-    private static final int CONNECTION_REFRESH_RATE_IN_SECONDS = 10;
     private static final int NUMBER_OF_DEVICES_ALLOWED = 30;
 
     public MainNode() {

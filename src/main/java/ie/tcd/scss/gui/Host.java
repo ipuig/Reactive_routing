@@ -4,6 +4,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
@@ -26,7 +28,6 @@ public class Host extends JFrame {
     private Endpoint host;
 
     public JList<Integer> availableHosts;
-    private JScrollPane hostViews;
 
     private JButton refreshButton;
     private JButton sendButton;
@@ -34,7 +35,6 @@ public class Host extends JFrame {
     public Host(Endpoint host) {
         this.host = host;
         availableHosts = new JList<>(new DefaultListModel<Integer>());
-        hostViews = new JScrollPane(availableHosts);
 
         setTitle("Endpoint Interface");
         host.requestEndpointList();
@@ -42,11 +42,17 @@ public class Host extends JFrame {
         setSize(600, 400);
         setVisible(true);
         setJMenuBar(topMenu(host.senderAddress));
-        add(hostViews, BorderLayout.WEST);
+        add(new JScrollPane(availableHosts), BorderLayout.WEST);
         add(commandArea(), BorderLayout.CENTER);
         add(inputFields(), BorderLayout.SOUTH);
 
         ActionListenerInstaller.processAnnotations(this);
+        addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                host.disconnect();
+            }
+        });
+
     }
 
     private JMenuBar topMenu(int addr) {

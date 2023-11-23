@@ -30,7 +30,7 @@ public class Endpoint extends Member {
         new Thread(() -> {
             while(true) {
                 requestEndpointList();
-                delay(2);
+                delay(CONNECTION_REFRESH_RATE_IN_SECONDS / 2);
             }
         }).start();
 

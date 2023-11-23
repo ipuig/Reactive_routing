@@ -73,15 +73,6 @@ public class MainNode extends NetworkDevice {
         send(PacketType.CHECK_CONNECTION, SERVER_GENERATED_ADDRESS_BOUND, new byte[0], nodeInfo.getAddress(), nodeInfo.getPort());
     }
 
-    private void delay(int seconds) {
-        try {
-            Thread.sleep(seconds * 1000);
-        }
-        catch(Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private List<Integer> getEndpointsAddress() {
         return connections
             .values()

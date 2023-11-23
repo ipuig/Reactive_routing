@@ -5,6 +5,7 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Insets;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -23,21 +24,25 @@ import ie.tcd.scss.network.Endpoint;
 public class Host extends JFrame {
 
     private Endpoint host;
-    public JList<String> availableHosts;
+
+    public JList<Integer> availableHosts;
+    private JScrollPane hostViews;
 
     private JButton refreshButton;
     private JButton sendButton;
 
     public Host(Endpoint host) {
         this.host = host;
+        availableHosts = new JList<>(new DefaultListModel<Integer>());
+        hostViews = new JScrollPane(availableHosts);
+
         setTitle("Endpoint Interface");
         host.requestEndpointList();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(600, 400);
         setVisible(true);
         setJMenuBar(topMenu(host.senderAddress));
-        var endpointList = availableEndpoints();
-        add(endpointList, BorderLayout.WEST);
+        add(hostViews, BorderLayout.WEST);
         add(commandArea(), BorderLayout.CENTER);
         add(inputFields(), BorderLayout.SOUTH);
 
@@ -51,15 +56,15 @@ public class Host extends JFrame {
         return container;
     }
 
-    private JScrollPane availableEndpoints() {
-        updateHosts();
-        availableHosts.addListSelectionListener(e -> {
-            if(e.getValueIsAdjusting()) return;
-            String selectedUser = availableHosts.getSelectedValue();
-            createPrivateMessageWindow(selectedUser);
-        });
-        return new JScrollPane(availableHosts);
-    }
+    // private JScrollPane availableEndpoints() {
+    //     updateHosts();
+    //     availableHosts.addListSelectionListener(e -> {
+    //         if(e.getValueIsAdjusting()) return;
+    //         int selectedUser = availableHosts.getSelectedValue();
+    //         createPrivateMessageWindow(selectedUser);
+    //     });
+    //     return new JScrollPane(availableHosts);
+    // }
 
     private JScrollPane commandArea() {
         var textArea = new JTextArea();
@@ -78,7 +83,7 @@ public class Host extends JFrame {
         return container;
     }
 
-    private void createPrivateMessageWindow(String addr) {
+    private void createPrivateMessageWindow(int addr) {
         JDialog dialog = new JDialog(this, "Private Message to: " + addr, true);
         dialog.setPreferredSize(new Dimension(400, 120));
         dialog.pack();
@@ -110,15 +115,6 @@ public class Host extends JFrame {
 
     @ActionListenerFor(source = "refreshButton")
     public void updateHosts() {
-    System.out.println("updating...");
-        var available = host.getOtherHostsAddress();
-        String[] hosts = available.stream()
-               .map(currentAddr -> Integer.toString(currentAddr))
-               .toList()
-               .toString()
-               .replaceAll("[\\[\\]\\s]", "")
-               .split(",");
-
-        availableHosts = new JList<>(hosts);
+        System.out.println("heya");
     }
 }

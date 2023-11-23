@@ -3,6 +3,9 @@ package ie.tcd.scss.network;
 import java.awt.EventQueue;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.DefaultListModel;
+
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
 
@@ -14,14 +17,23 @@ public class Endpoint extends Member {
     private List<Integer> otherHostsAddress;
     private Host gui;
 
-
     public Endpoint() {
         super(ENDPOINT_PORT);
         otherHostsAddress = new ArrayList<>();
     }
 
     public void run() {
-        new Thread(() -> {while(true) receive();}).start();
+        new Thread(() -> {
+            while(true) receive();
+        }).start();
+
+        new Thread(() -> {
+            while(true) {
+                requestEndpointList();
+                delay(2);
+            }
+        }).start();
+
         System.out.println("endpoint no-" + senderAddress);
         EventQueue.invokeLater(() -> {
             gui = new Host(this);
@@ -41,7 +53,6 @@ public class Endpoint extends Member {
     }
 
     public void requestEndpointList() {
-        System.out.println("looking for other endpoints...");
         send(PacketType.REQUEST_ENDPOINT_LIST, senderAddress, new byte[0], applicationAddress, MAIN_NODE_PORT);
     }
 
@@ -79,10 +90,12 @@ public class Endpoint extends Member {
 
                 case CHECK_CONNECTION:
                     stillConnected();
+
                     break;
 
                 case ENDPOINT_LIST:
                     populateHosts();
+                    updateHostView();
                     break;
 
                 case ACK:
@@ -99,12 +112,17 @@ public class Endpoint extends Member {
             otherHostsAddress = new ArrayList<>();
             ByteBuffer payloadBuffer = ByteBuffer.wrap(receivedPayload);
             int numberOfHosts = payloadBuffer.getInt();
-            for (int i = 0; i < numberOfHosts; i++) otherHostsAddress.add(payloadBuffer.getInt());
+            for (int i = 0; i < numberOfHosts; i++) {
+                final int currentAddress = payloadBuffer.getInt();
+                if (currentAddress != senderAddress)
+                    otherHostsAddress.add(currentAddress);
+            }
         }
     }
 
-    public List<Integer> getOtherHostsAddress() {
-        return otherHostsAddress;
+    private void updateHostView() {
+        DefaultListModel<Integer> lm = new DefaultListModel<Integer>();
+        lm.addAll(otherHostsAddress);
+        gui.availableHosts.setModel(lm);
     }
-
 }

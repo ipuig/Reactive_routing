@@ -29,7 +29,6 @@ public class Host extends JFrame {
 
     public JList<Integer> availableHosts;
 
-    private JButton refreshButton;
     private JButton sendButton;
 
     public Host(Endpoint host) {
@@ -46,13 +45,18 @@ public class Host extends JFrame {
         add(commandArea(), BorderLayout.CENTER);
         add(inputFields(), BorderLayout.SOUTH);
 
-        ActionListenerInstaller.processAnnotations(this);
+        availableHosts.addListSelectionListener(e -> {
+            if(e.getValueIsAdjusting()) return;
+            createPrivateMessageWindow(availableHosts.getSelectedValue());
+        });
+
         addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 host.disconnect();
             }
         });
 
+        ActionListenerInstaller.processAnnotations(this);
     }
 
     private JMenuBar topMenu(int addr) {
@@ -61,16 +65,6 @@ public class Host extends JFrame {
         container.add(menu);
         return container;
     }
-
-    // private JScrollPane availableEndpoints() {
-    //     updateHosts();
-    //     availableHosts.addListSelectionListener(e -> {
-    //         if(e.getValueIsAdjusting()) return;
-    //         int selectedUser = availableHosts.getSelectedValue();
-    //         createPrivateMessageWindow(selectedUser);
-    //     });
-    //     return new JScrollPane(availableHosts);
-    // }
 
     private JScrollPane commandArea() {
         var textArea = new JTextArea();
@@ -82,8 +76,6 @@ public class Host extends JFrame {
         var container = new JPanel();
         var inputField = new JTextField(30);
         sendButton = new JButton("send");
-        refreshButton = new JButton("refresh");
-        container.add(refreshButton, BorderLayout.WEST);
         container.add(inputField, BorderLayout.CENTER);
         container.add(sendButton, BorderLayout.EAST);
         return container;
@@ -119,7 +111,7 @@ public class Host extends JFrame {
         dialog.setVisible(true);
     }
 
-    @ActionListenerFor(source = "refreshButton")
+    // @ActionListenerFor(source = "refreshButton")
     public void updateHosts() {
         System.out.println("heya");
     }

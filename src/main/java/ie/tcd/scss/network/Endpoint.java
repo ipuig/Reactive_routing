@@ -70,22 +70,17 @@ public class Endpoint extends Member {
                     break;
 
                 case DISCOVER:
-                    if (receivedSenderAddress != senderAddress) {
-                        System.out.println("Received a discover from " +  receivedSenderAddress);
-                        System.out.println("I received this message: " + new String(receivedPayload));
-                    }
+                    if(senderAddress != receivedSenderAddress)
+                        processDiscover(senderAddress, receivedPayload);
                     break;
 
                 case PATH:
-                    System.out.println("Received a path from " + receivedSenderAddress);
                     break;
 
                 case DEAD_END:
-                    System.out.println("Received a dead end from " + receivedSenderAddress);
                     break;
 
                 case RANDOM_ADDR:
-                    System.out.println("Random address received");
                     break;
 
                 case CHECK_CONNECTION:
@@ -125,4 +120,5 @@ public class Endpoint extends Member {
         lm.addAll(otherHostsAddress);
         gui.availableHosts.setModel(lm);
     }
+
 }

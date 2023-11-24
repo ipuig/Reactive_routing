@@ -42,4 +42,21 @@ public abstract class Member extends NetworkDevice {
     public void disconnect() {
         send(PacketType.CONNECTION_INACTIVE, senderAddress, new byte[0], applicationAddress, MAIN_NODE_PORT);
     }
+    
+    public void findPath(int addr) {
+        ByteBuffer buff = ByteBuffer.allocate(Integer.SIZE);
+        buff.putInt(addr);
+        sendBroadcast(PacketType.DISCOVER, senderAddress, buff.array());
+    }
+
+    private void backtrackAndAddToPath() {
+        System.out.println("found");
+
+    }
+
+    public void processDiscover(int addr, byte[] payload) {
+        ByteBuffer buff = ByteBuffer.wrap(payload);
+        if(addr == buff.getInt()) backtrackAndAddToPath();
+        else findPath(addr);
+    }
 }

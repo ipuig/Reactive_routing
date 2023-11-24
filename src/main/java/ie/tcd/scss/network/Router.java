@@ -16,7 +16,6 @@ public class Router extends Member {
             receive();
     }
 
-
     public void receive() {
         try {
             byte[] buffer = new byte[BUFFER_SIZE];
@@ -26,7 +25,6 @@ public class Router extends Member {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 
     private class ReceiverHandler extends Receiver {
@@ -42,6 +40,8 @@ public class Router extends Member {
                     break;
 
                 case DISCOVER:
+                    if(senderAddress != receivedSenderAddress)
+                        processDiscover(senderAddress, receivedPayload);
                     break;
 
                 case PATH:

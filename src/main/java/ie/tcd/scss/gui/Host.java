@@ -1,15 +1,12 @@
 package ie.tcd.scss.gui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Insets;
+import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -25,11 +22,12 @@ import ie.tcd.scss.network.Endpoint;
 
 public class Host extends JFrame {
 
-    private Endpoint host;
+    public Endpoint host;
 
     public JList<Integer> availableHosts;
-
     private JButton sendButton;
+    private JTextField inputField;
+    private JTextArea appLog;
 
     public Host(Endpoint host) {
         this.host = host;
@@ -47,7 +45,8 @@ public class Host extends JFrame {
 
         availableHosts.addListSelectionListener(e -> {
             if(e.getValueIsAdjusting()) return;
-            createPrivateMessageWindow(availableHosts.getSelectedValue());
+            final int selected = availableHosts.getSelectedValue();
+            new PrivateMessageWindow(this, selected);
         });
 
         addWindowListener(new WindowAdapter() {
@@ -67,52 +66,26 @@ public class Host extends JFrame {
     }
 
     private JScrollPane commandArea() {
-        var textArea = new JTextArea();
-        textArea.setEditable(false);
-        return new JScrollPane(textArea);
+        appLog = new JTextArea();
+        appLog.setEditable(false);
+        return new JScrollPane(appLog);
     }
 
     private JPanel inputFields() {
         var container = new JPanel();
-        var inputField = new JTextField(30);
+        inputField = new JTextField(30);
         sendButton = new JButton("send");
         container.add(inputField, BorderLayout.CENTER);
         container.add(sendButton, BorderLayout.EAST);
+        this.getRootPane().setDefaultButton(sendButton);
         return container;
     }
 
-    private void createPrivateMessageWindow(int addr) {
-        JDialog dialog = new JDialog(this, "Private Message to: " + addr, true);
-        dialog.setPreferredSize(new Dimension(400, 120));
-        dialog.pack();
-        JTextArea textArea = new JTextArea();
-        Insets margin = new Insets(10, 10, 10, 10);
-        textArea.setMargin(margin);
-        JScrollPane scrollPane = new JScrollPane(textArea);
-        dialog.add(scrollPane, BorderLayout.CENTER);
-
-        JButton sendButton = new JButton("Send");
-        JButton cancelButton = new JButton("Cancel");
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
-
-        buttonPanel.add(sendButton);
-        buttonPanel.add(cancelButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-
-        sendButton.addActionListener(e -> {
-            String message = textArea.getText();
-            System.out.println("Sending private message to " + addr + ": " + message);
-            dialog.dispose();
-        });
-
-        cancelButton.addActionListener(e -> dialog.dispose());
-
-        dialog.setLocationRelativeTo(this);
-        dialog.setVisible(true);
-    }
-
-    // @ActionListenerFor(source = "refreshButton")
-    public void updateHosts() {
-        System.out.println("heya");
+    @ActionListenerFor(source = "sendButton")
+    public void send() {
+        final String input = inputField.getText();
+        final String cmd = appLog.getText();
+        inputField.setText("");
+        appLog.setText(cmd + "\n" + input);
     }
 }

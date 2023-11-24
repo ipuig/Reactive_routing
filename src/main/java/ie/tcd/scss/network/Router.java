@@ -1,8 +1,5 @@
 package ie.tcd.scss.network;
-
 import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
 
 public class Router extends Member {
 
@@ -12,7 +9,7 @@ public class Router extends Member {
 
     public void run() {
         System.out.println("router no-" + senderAddress);
-        while(true)
+        while(true) 
             receive();
     }
 
@@ -40,11 +37,14 @@ public class Router extends Member {
                     break;
 
                 case DISCOVER:
-                    if(senderAddress != receivedSenderAddress)
-                        processDiscover(senderAddress, receivedPayload);
+                    if (!devicePath.contains(receivedSenderAddress)) {
+                        devicePath.push(receivedSenderAddress);
+                        processDiscover(this, senderAddress);
+                    }
                     break;
 
                 case PATH:
+                    if(isInPath(senderAddress, receivedPayload)) backtrack(this, senderAddress);
                     break;
 
                 case DEAD_END:
@@ -66,6 +66,5 @@ public class Router extends Member {
             }
 
         }
-
     }
 }

@@ -7,6 +7,7 @@ import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -27,15 +28,17 @@ public abstract class NetworkDevice {
     public static final int SERVER_GENERATED_ADDRESS_BOUND = Integer.MAX_VALUE;
     public static final int CONNECTION_REFRESH_RATE_IN_SECONDS = 5;
 
-
     public ExecutorService threadPool;
     public DatagramSocket socket;
     public int senderAddress;
     public ArrayList<InetAddress> broadcastAddresses;
 
+    public Stack<Integer> devicePath;
+
     public NetworkDevice(int port) {
         broadcastAddresses = new ArrayList<>();
         threadPool = Executors.newFixedThreadPool(THREAD_POOL_SIZE);
+        devicePath = new Stack<>();
 
         try {
             socket = new DatagramSocket(port);

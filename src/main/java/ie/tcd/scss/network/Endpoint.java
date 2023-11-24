@@ -15,11 +15,15 @@ import ie.tcd.scss.gui.Host;
 public class Endpoint extends Member {
 
     private List<Integer> otherHostsAddress;
+    // private List<PathSequence> paths;
     private Host gui;
+    private int sendingTo;
+    private String msg;
 
     public Endpoint() {
         super(ENDPOINT_PORT);
         otherHostsAddress = new ArrayList<>();
+        sendingTo = Integer.MAX_VALUE;
     }
 
     public void run() {
@@ -70,12 +74,19 @@ public class Endpoint extends Member {
                     break;
 
                 case DISCOVER:
-                    if(senderAddress != receivedSenderAddress)
-                        processDiscover(senderAddress, receivedPayload);
+                    if (!devicePath.contains(receivedSenderAddress)) {
+                        devicePath.push(receivedSenderAddress);
+                        processDiscover(this, senderAddress);
+                    }
                     break;
 
                 case PATH:
-                    break;
+                    if (isSender()) {
+                        devicePath.clear();
+                        devicePath.push(senderAddress);
+                        sendMessage(receivedPayload, msg);
+                    }
+                    else if (isInPath(senderAddress, receivedPayload)) backtrack(this, senderAddress);
 
                 case DEAD_END:
                     break;
@@ -113,6 +124,12 @@ public class Endpoint extends Member {
                     otherHostsAddress.add(currentAddress);
             }
         }
+
+        private boolean isSender() {
+            ByteBuffer buff = ByteBuffer.wrap(receivedPayload);
+            buff.getInt(); // position
+            return buff.getInt() == sendingTo;
+        }
     }
 
     private void updateHostView() {
@@ -121,4 +138,12 @@ public class Endpoint extends Member {
         gui.availableHosts.setModel(lm);
     }
 
+    private void sendMessage(byte[] path, String msg) {
+        System.out.println("sending message");
+    }
+
+    public void prepareMessage(int addr, String msg) {
+        this.sendingTo = addr;
+        this.msg = msg;
+    }
 }

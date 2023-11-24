@@ -57,8 +57,11 @@ public class PrivateMessageWindow extends JDialog {
 
     @ActionListenerFor(source = "sendButton")
     public void send() {
-        System.out.println("clicked");
+        final String input = textArea.getText();
+        textArea.setText("");
+        parent.host.prepareMessage(addr, input);
         parent.host.findPath(addr);
+        this.dispose();
     }
 
     @ActionListenerFor(source = "cancelButton")

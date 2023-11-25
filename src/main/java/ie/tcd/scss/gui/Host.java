@@ -27,7 +27,7 @@ public class Host extends JFrame {
     public JList<Integer> availableHosts;
     private JButton sendButton;
     private JTextField inputField;
-    private JTextArea appLog;
+    private JTextArea hostLogs;
 
     public Host(Endpoint host) {
         this.host = host;
@@ -66,9 +66,9 @@ public class Host extends JFrame {
     }
 
     private JScrollPane commandArea() {
-        appLog = new JTextArea();
-        appLog.setEditable(false);
-        return new JScrollPane(appLog);
+        hostLogs = new JTextArea();
+        hostLogs.setEditable(false);
+        return new JScrollPane(hostLogs);
     }
 
     private JPanel inputFields() {
@@ -81,11 +81,19 @@ public class Host extends JFrame {
         return container;
     }
 
+    public void receiveMessage(String msg) {
+        hostLogs.setText("%s\nreceived message: %s".formatted(hostLogs.getText(), msg));
+    }
+
+    public void sendMessage(String msg, int dst) {
+        hostLogs.setText("%s\nto %d: %s".formatted(hostLogs.getText(), dst, msg));
+    }
+
     @ActionListenerFor(source = "sendButton")
     public void send() {
         final String input = inputField.getText();
-        final String cmd = appLog.getText();
+        final String cmd = hostLogs.getText();
         inputField.setText("");
-        appLog.setText(cmd + "\n" + input);
+        hostLogs.setText(cmd + "\n" + input);
     }
 }

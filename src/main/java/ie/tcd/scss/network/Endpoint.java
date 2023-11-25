@@ -8,7 +8,7 @@ import javax.swing.DefaultListModel;
 
 import java.net.DatagramPacket;
 import java.nio.ByteBuffer;
-
+import java.nio.charset.StandardCharsets;
 
 import ie.tcd.scss.gui.Host;
 
@@ -70,9 +70,16 @@ public class Endpoint extends Member {
             switch(PacketType.fromInt(receivedPacketType)) {
 
                 case MESSAGE:
+
                     if(processMessage(this, senderAddress)) {
-                        System.out.println(new String(new PathSequence(receivedPayload).getMessage()));
+
+                        var endPath = new PathSequence(receivedPayload);
+                        String msg = endPath.getMessage();
+                        System.out.println("received the message: " + msg);
+                        gui.receiveMessage(msg);
+
                     }
+
                     break;
 
                 case DISCOVER:
@@ -141,10 +148,7 @@ public class Endpoint extends Member {
     }
 
     private void sendMessage(byte[] payload, String msg) {
-        System.out.println("sending message:");
-        System.out.println(msg.getBytes().length);
-        System.out.println(new String(msg.getBytes()));
-        var path = PathSequence.createFromSplit(payload, msg.getBytes());
+        var path = PathSequence.createWithNewMessage(payload, msg);
         System.out.println(path);
         if (path.pop() == senderAddress) 
             sendBroadcast(PacketType.MESSAGE, path.pop(), path.asPayload());

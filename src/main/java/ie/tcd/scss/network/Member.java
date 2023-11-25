@@ -52,7 +52,6 @@ public abstract class Member extends NetworkDevice {
     }
 
     private void backtrackAndAddToPath(Receiver received, int addr) {
-        System.out.println("successfully found");
         ByteBuffer buff = ByteBuffer.allocate(Integer.SIZE * 3);
         buff.putInt(2);
         buff.putInt(addr);
@@ -87,13 +86,13 @@ public abstract class Member extends NetworkDevice {
 
         if (receiver.receivedSenderAddress != addr) return false;
 
-        System.out.println("Received message, forwarding...");
         var path = new PathSequence(receiver.receivedPayload);
-        System.out.println(path);
 
         if (path.isEmpty()) return true;
-        sendBroadcast(PacketType.MESSAGE, path.pop(), path.asPayload());
 
+        int next = path.pop();
+        System.out.println("Received message, forwarding to " + next);
+        sendBroadcast(PacketType.MESSAGE, next, path.asPayload());
         return false;
     }
 

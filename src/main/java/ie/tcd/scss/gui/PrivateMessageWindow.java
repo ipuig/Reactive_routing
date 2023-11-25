@@ -61,6 +61,7 @@ public class PrivateMessageWindow extends JDialog {
         textArea.setText("");
         parent.host.prepareMessage(addr, input);
         parent.host.findPath(addr);
+        parent.sendMessage(input, addr);
         this.dispose();
     }
 

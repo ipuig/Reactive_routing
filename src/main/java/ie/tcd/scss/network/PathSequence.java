@@ -1,7 +1,10 @@
 package ie.tcd.scss.network;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.IntBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 /**
  * PathSequence
@@ -15,7 +18,8 @@ import java.nio.IntBuffer;
 public class PathSequence {
     private int size;
     private int[] sequence;
-    private byte[] message;
+    private String message;
+    public static Charset charset = Charset.forName("UTF-8");
 
     public PathSequence(byte[] payload) {
         ByteBuffer buff = ByteBuffer.wrap(payload);
@@ -23,10 +27,20 @@ public class PathSequence {
         sequence = new int[size];
         for (int i = 0; i < size; i++) sequence[i] = buff.getInt();
 
-        int messageSize = payload.length - size;
-        message = new byte[messageSize];
-        System.arraycopy(payload, size, message, 0, messageSize);
-        System.out.println("message stored:" + message.length);
+        CharBuffer cbf = charset.decode(buff);
+        message = cbf.toString().trim();
+
+        System.out.println(
+                """
+
+                --------------------------
+                created a new path that has
+                %d number of addresses
+                which is (%s)
+                path: %s
+                --------------------------
+
+                """.formatted(size, getMessage(), toString()));
     }
 
     public int pop() {
@@ -39,14 +53,12 @@ public class PathSequence {
     }
 
     public byte[] asPayload() {
-        ByteBuffer buff = ByteBuffer.allocate((size + 1) * Integer.SIZE);
+        byte[] strBytes = message.getBytes(charset);
+        ByteBuffer buff = ByteBuffer.allocate(Integer.BYTES + (size * Integer.BYTES) + (Character.BYTES *strBytes.length));
         buff.putInt(size);
         for (int i : sequence) buff.putInt(i);
-        byte[] path = buff.array();
-        ByteBuffer newBuff = ByteBuffer.allocate(path.length + message.length);
-        newBuff.put(path);
-        newBuff.put(message);
-        return newBuff.array();
+        buff.put(strBytes);
+        return buff.array();
     }
 
     @Override
@@ -58,7 +70,7 @@ public class PathSequence {
             sb.append(" ");
         }
         sb.append("]");
-        return sb.toString();
+        return sb.toString(); 
     }
 
     public int getSize() {
@@ -69,15 +81,15 @@ public class PathSequence {
         return size == 0;
     }
 
-    public static PathSequence createFromSplit(byte[] first, byte[] second) {
-        ByteBuffer buff = ByteBuffer.allocate(first.length + second.length);
+    public static PathSequence createWithNewMessage(byte[] first, String second) {
+        byte[] strBytes = second.getBytes(charset);
+        ByteBuffer buff = ByteBuffer.allocate(first.length + strBytes.length);
         buff.put(first);
-        buff.put(second);
+        buff.put(strBytes);
         return new PathSequence(buff.array());
     }
 
-    public byte[] getMessage() {
-        System.out.println(message.length);
+    public String getMessage() {
         return message;
     }
 }

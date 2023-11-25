@@ -29,18 +29,6 @@ public class PathSequence {
 
         CharBuffer cbf = charset.decode(buff);
         message = cbf.toString().trim();
-
-        System.out.println(
-                """
-
-                --------------------------
-                created a new path that has
-                %d number of addresses
-                which is (%s)
-                path: %s
-                --------------------------
-
-                """.formatted(size, getMessage(), toString()));
     }
 
     public int pop() {

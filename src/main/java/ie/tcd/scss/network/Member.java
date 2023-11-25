@@ -3,8 +3,6 @@ package ie.tcd.scss.network;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
 
 public abstract class Member extends NetworkDevice {
 
@@ -60,13 +58,12 @@ public abstract class Member extends NetworkDevice {
     }
 
     public void processDiscover(Receiver received, int addr) {
-        System.out.println("received a discover from a broadcast sent by " + received.receivedSenderAddress);
+        System.out.println("\ndiscover_" + received.receivedSenderAddress);
         ByteBuffer buff = ByteBuffer.wrap(received.receivedPayload);
         if(addr == buff.getInt()) {
             backtrackAndAddToPath(received, addr);
             return;
         } 
-        System.out.println("Broadcasting...");
         sendBroadcast(PacketType.DISCOVER, senderAddress, received.receivedPayload);
     }
 
@@ -91,7 +88,7 @@ public abstract class Member extends NetworkDevice {
         if (path.isEmpty()) return true;
 
         int next = path.pop();
-        System.out.println("Received message, forwarding to " + next);
+        System.out.println("\nmsg_to_" + next);
         sendBroadcast(PacketType.MESSAGE, next, path.asPayload());
         return false;
     }
@@ -122,7 +119,7 @@ public abstract class Member extends NetworkDevice {
             return;
         }
 
-        System.out.printf("received path from %d broadcasting to %d\n", receiver.receivedSenderAddress, prevAddr);
+        System.out.printf("\npath_backtracking_to_%d\n", prevAddr);
         byte[] payload = updatePayload(prevAddr, receiver.receivedPayload);
         sendBroadcast(PacketType.PATH, addr, payload);
     }

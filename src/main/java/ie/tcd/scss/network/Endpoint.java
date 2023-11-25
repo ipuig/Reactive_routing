@@ -149,9 +149,10 @@ public class Endpoint extends Member {
 
     private void sendMessage(byte[] payload, String msg) {
         var path = PathSequence.createWithNewMessage(payload, msg);
-        System.out.println(path);
-        if (path.pop() == senderAddress) 
+        if (path.pop() == senderAddress) {
+            System.out.println("Found path within " + path.getSize() + " hops");
             sendBroadcast(PacketType.MESSAGE, path.pop(), path.asPayload());
+        }
 
     }
 

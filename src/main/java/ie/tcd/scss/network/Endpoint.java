@@ -15,7 +15,6 @@ import ie.tcd.scss.gui.Host;
 public class Endpoint extends Member {
 
     private List<Integer> otherHostsAddress;
-    // private List<PathSequence> paths;
     private Host gui;
     private int sendingTo;
     private String msg;
@@ -71,6 +70,9 @@ public class Endpoint extends Member {
             switch(PacketType.fromInt(receivedPacketType)) {
 
                 case MESSAGE:
+                    if(processMessage(this, senderAddress)) {
+                        System.out.println(new String(new PathSequence(receivedPayload).getMessage()));
+                    }
                     break;
 
                 case DISCOVER:
@@ -138,8 +140,15 @@ public class Endpoint extends Member {
         gui.availableHosts.setModel(lm);
     }
 
-    private void sendMessage(byte[] path, String msg) {
-        System.out.println("sending message");
+    private void sendMessage(byte[] payload, String msg) {
+        System.out.println("sending message:");
+        System.out.println(msg.getBytes().length);
+        System.out.println(new String(msg.getBytes()));
+        var path = PathSequence.createFromSplit(payload, msg.getBytes());
+        System.out.println(path);
+        if (path.pop() == senderAddress) 
+            sendBroadcast(PacketType.MESSAGE, path.pop(), path.asPayload());
+
     }
 
     public void prepareMessage(int addr, String msg) {

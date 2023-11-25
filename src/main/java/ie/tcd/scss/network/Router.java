@@ -34,6 +34,7 @@ public class Router extends Member {
 
             switch(PacketType.fromInt(receivedPacketType)) {
                 case MESSAGE:
+                    processMessage(this, senderAddress);
                     break;
 
                 case DISCOVER:

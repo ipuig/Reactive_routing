@@ -9,14 +9,12 @@ import java.util.HashSet;
 public abstract class Member extends NetworkDevice {
 
     public InetAddress applicationAddress;
-    private InetAddress currentAddress;
 
     public Member(int port) {
         super(port);
 
         try {
             applicationAddress = InetAddress.getByName("172.17.0.2");
-            currentAddress = InetAddress.getLocalHost();
             connect();
             devicePath.push(senderAddress);
         }
@@ -80,6 +78,23 @@ public abstract class Member extends NetworkDevice {
         int value = 0;
         for (int i = 0; i <= position; i++) value = buff.getInt();
         return value == addr;
+    }
+
+    public boolean processMessage(Receiver receiver, int addr) {
+
+        devicePath.clear();
+        devicePath.push(senderAddress);
+
+        if (receiver.receivedSenderAddress != addr) return false;
+
+        System.out.println("Received message, forwarding...");
+        var path = new PathSequence(receiver.receivedPayload);
+        System.out.println(path);
+
+        if (path.isEmpty()) return true;
+        sendBroadcast(PacketType.MESSAGE, path.pop(), path.asPayload());
+
+        return false;
     }
 
     public byte[] updatePayload(int addr, byte[] payload) {

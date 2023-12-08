@@ -1,7 +1,6 @@
 package ie.tcd.scss.gui;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 

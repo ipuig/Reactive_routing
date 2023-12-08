@@ -9,7 +9,6 @@ public class Header {
     private short payloadLength;
     private final int HEADER_LENGTH = 7;
 
-
     public Header(byte packetType, int senderAddress, short payloadLength) {
         this.packetType = packetType;
         this.senderAddress = senderAddress;
